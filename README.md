@@ -1,5 +1,4 @@
 <div align="center">
-  <img src="https://via.placeholder.com/150x150/111111/FFFFFF?text=N" alt="NexusCart Logo" width="120" height="120" />
   <h1>NexusCart E-Commerce Platform</h1>
   <p><strong>A Modern, Enterprise-Grade Microservices Monorepo</strong></p>
   <p>
@@ -37,7 +36,7 @@ graph TD
     Client[Browser / Mobile Client] -->|HTTPS| Frontend
     
     %% Define Frontend Layer
-    subgraph Client Application
+    subgraph ClientApp [Client Application]
         Frontend[Next.js App Router]
     end
     
@@ -45,7 +44,7 @@ graph TD
     Frontend -->|API Requests| Gateway[Azure API Gateway]
     
     %% Define Microservices Layer
-    subgraph Azure Container Apps (Internal VNet)
+    subgraph AzureApps [Azure Container Apps Internal VNet]
         Gateway --> Auth[Auth Service]
         Gateway --> Biz[Business Service]
         Gateway --> Prod[Product Service]
@@ -57,7 +56,7 @@ graph TD
     end
     
     %% Define Database Layer
-    subgraph Azure Cosmos DB
+    subgraph AzureDB [Azure Cosmos DB]
         Auth -.-> DB[(Global MongoDB)]
         Biz -.-> DB
         Prod -.-> DB
