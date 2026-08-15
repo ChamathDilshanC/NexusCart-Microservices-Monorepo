@@ -1,0 +1,6 @@
+[submodule "backend"]
+	path = backend
+	url = https://github.com/ChamathDilshanC/NexusCart-Microservices-Backend.git
+[submodule "frontend"]
+	path = frontend
+	url = ./frontend
