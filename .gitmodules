@@ -3,4 +3,4 @@
 	url = https://github.com/ChamathDilshanC/NexusCart-Microservices-Backend.git
 [submodule "frontend"]
 	path = frontend
-	url = https://github.com/ChamathDilshanC/NexusCart-Frontend.git
+	url = https://github.com/ChamathDilshanC/NexusCart-Microservices-Frontend.git
