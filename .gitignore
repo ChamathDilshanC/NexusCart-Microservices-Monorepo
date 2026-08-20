@@ -16,3 +16,7 @@ npm-debug.log*
 .vscode/
 .idea/
 .DS_Store
+
+# Database dumps (contain live production data — never commit)
+cosmos-dump-*/
+*.bson

@@ -69,8 +69,8 @@ graph TD
     end
     
     %% Define Database Layer
-    subgraph AzureDB [Azure Cosmos DB]
-        Auth -.-> DB[(Global MongoDB)]
+    subgraph OracleDB [Oracle Autonomous JSON Database]
+        Auth -.-> DB[(Mongo API<br/>on Oracle Cloud)]
         Biz -.-> DB
         Prod -.-> DB
         Order -.-> DB
@@ -115,7 +115,7 @@ In order to guarantee zero single points of failure and independent scalability,
   - Handles User Registration and Login.
   - Generates secure JWT access tokens.
   - Manages the Email OTP (One-Time Password) flow using Nodemailer.
-  - Stores user credentials and profile data in Cosmos DB.
+  - Stores user credentials and profile data in Oracle Autonomous JSON Database (accessed via the Oracle Database API for MongoDB).
 
 ### 3. Business Service (`business-service`)
 - **Role:** Merchant & Vendor Operations.
@@ -202,10 +202,11 @@ Visit `http://localhost:3000` to view the application!
 
 ## ☁️ Cloud Deployment (CI/CD)
 
-The entire platform is fully automated and deployed to **Microsoft Azure**.
+The platform's compute is deployed to **Microsoft Azure**; its database runs on **Oracle Cloud Infrastructure (OCI)**.
 
 - Every `git push` to the backend repository triggers a **GitHub Actions** workflow that builds 9 separate Docker images in parallel, pushes them to Azure Container Registry (ACR), and executes zero-downtime rolling updates to Azure Container Apps.
-- Secrets (like `MONGODB_URI` and `JWT_SECRET`) are securely injected via Azure Key Vault integration at runtime.
+- Secrets (like `MONGODB_URI` and `JWT_SECRET`) are stored as native Azure Container Apps secrets and injected at runtime.
+- The primary database is an **Oracle Autonomous JSON Database** (Always Free tier), accessed via the **Oracle Database API for MongoDB** — Mongoose/MongoDB drivers connect to it unchanged. It replaced Azure Cosmos DB (Mongo API) to cut hosting cost; see [`docs/OCI_MIGRATION.md`](./docs/OCI_MIGRATION.md) for the migration runbook.
 
 ---
 
