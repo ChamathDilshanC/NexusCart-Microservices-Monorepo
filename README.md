@@ -50,7 +50,7 @@ graph TD
     Client[Browser / Mobile Client] -->|HTTPS| Frontend[Next.js App Router]
     Frontend -->|/api/* proxy| Gateway[API Gateway<br/>external ingress]
 
-    subgraph AzureApps [Azure Container Apps — internal VNet]
+    subgraph AzureApps["Azure Container Apps — internal VNet"]
         Gateway --> Auth[Auth Service]
         Gateway --> Prod[Product Service]
         Gateway --> Admin[Admin Service]
@@ -60,7 +60,7 @@ graph TD
         Gateway --> Review[Review Service]
     end
 
-    subgraph OracleDB [Oracle Autonomous JSON Database]
+    subgraph OracleDB["Oracle Autonomous JSON Database"]
         Auth -.-> DB[(Mongo API<br/>on Oracle Cloud)]
         Prod -.-> DB
         Order -.-> DB
