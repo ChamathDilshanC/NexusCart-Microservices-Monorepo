@@ -114,7 +114,7 @@ In order to guarantee zero single points of failure and independent scalability,
 - **Responsibilities:** 
   - Handles User Registration and Login.
   - Generates secure JWT access tokens.
-  - Manages the Email OTP (One-Time Password) flow using Nodemailer.
+  - Manages the Email OTP (One-Time Password) flow — registration and password-reset codes are sent via the Brevo API.
   - Stores user credentials and profile data in Oracle Autonomous JSON Database (accessed via the Oracle Database API for MongoDB).
 
 ### 3. Business Service (`business-service`)
@@ -149,7 +149,7 @@ In order to guarantee zero single points of failure and independent scalability,
 - **Role:** Multi-Channel Communication.
 - **Responsibilities:** 
   - A decoupled worker service that listens for internal events (e.g., "Order Placed", "Shipped").
-  - Dispatches Email and Push notifications to consumers automatically.
+  - Dispatches transactional email — order confirmation, status updates, and invoices — via the [Brevo](https://www.brevo.com/) API. See the "Transactional Email" section in the [Backend README](./backend/README.md) for a rendered email preview.
 
 ### 8. Review & Rating Service (`review-rating-service`)
 - **Role:** Social Proof & Moderation.
