@@ -3,63 +3,55 @@
   <p><strong>A Modern, Enterprise-Grade Microservices Monorepo</strong></p>
   <p>
     <a href="https://github.com/ChamathDilshanC/NexusCart-Microservices-Frontend"><img src="https://img.shields.io/badge/Frontend-Next.js_16-black?style=for-the-badge&logo=next.js" alt="Frontend" /></a>
-    <a href="https://github.com/ChamathDilshanC/NexusCart-Microservices-Backend"><img src="https://img.shields.io/badge/Backend-Node.js_Microservices-339933?style=for-the-badge&logo=node.js" alt="Backend" /></a>
+    <a href="https://github.com/ChamathDilshanC/NexusCart-Microservices-Backend"><img src="https://img.shields.io/badge/Backend-9_Microservices-339933?style=for-the-badge&logo=node.js" alt="Backend" /></a>
     <a href="https://azure.microsoft.com/"><img src="https://img.shields.io/badge/Infrastructure-Azure_Container_Apps-0078D4?style=for-the-badge&logo=microsoft-azure" alt="Azure" /></a>
+  </p>
+  <p>
+    <img src="https://img.shields.io/badge/Payments-PayHere-2c9c3f?style=flat-square" alt="PayHere" />
+    <img src="https://img.shields.io/badge/Database-Oracle_Autonomous_JSON-red?style=flat-square&logo=oracle" alt="Oracle" />
+    <img src="https://img.shields.io/badge/Email-Brevo-0b996e?style=flat-square" alt="Brevo" />
+    <img src="https://img.shields.io/badge/Auth-JWT_%2B_Google_OAuth-4285F4?style=flat-square&logo=google" alt="Auth" />
   </p>
 </div>
 
 <br />
 
-Welcome to the overarching workspace for the **NexusCart Platform**. NexusCart is a highly scalable, decoupled e-commerce solution engineered to handle high-traffic merchant stores and consumer shopping experiences. 
+Welcome to the overarching workspace for the **NexusCart Platform** — a full e-commerce system built as 9 independent backend microservices plus a Next.js storefront/admin console, engineered around real production concerns: atomic stock control, role-based admin access, a signed payment-gateway integration, and multi-currency support.
 
-This repository serves as the **Monorepo Workspace** that binds together the independent Frontend and Backend subsystems using Git Submodules, providing developers with a unified view of the entire system architecture.
+This repository is the **Monorepo Workspace** that binds the independent [Frontend](https://github.com/ChamathDilshanC/NexusCart-Microservices-Frontend) and [Backend](https://github.com/ChamathDilshanC/NexusCart-Microservices-Backend) repos together via Git Submodules, giving a single, versioned view of the whole system.
 
 ---
 
-## 🌟 Comprehensive Platform Features
-
-NexusCart is built from the ground up to support multiple vendors, massive product catalogs, and seamless consumer experiences.
+## 🌟 Platform Features
 
 ### For Customers
-- **Seamless Authentication:** Secure JWT-based login with dynamic Email OTP verifications.
-- **Smart Catalog & Search:** Lightning-fast product discovery with intelligent filtering.
-- **Real-time Cart & Checkout:** Persistent carts across devices with a streamlined, multi-step secure checkout process.
-- **Order Tracking:** Live status updates for active orders and comprehensive order history.
-- **Reviews & Ratings:** Authenticated purchasing verification to ensure reviews are from real buyers.
-
-### For Merchants (Vendors)
-- **Vendor Onboarding:** Automated business registration and verification workflows.
-- **Inventory Management:** Dashboard to create, edit, and track product stock in real-time.
-- **Analytics & Sales:** Deep insights into store performance, popular products, and revenue.
-- **Order Fulfillment:** Merchant tools to update shipping statuses and print invoices.
+- **Flexible auth** — email/password with OTP verification, or Google one-tap login.
+- **Templated storefront** — the shop and its banners are built from 7–8 configurable layouts (carousel, grid, spotlight, bento, showcase, marquee, cinematic...), each independently positioned by an admin — not hardcoded page sections.
+- **Multi-currency** — live exchange rates, switch currency anywhere, prices stay consistent across cart/checkout/invoices.
+- **Real payments** — checkout redirects to **PayHere's** hosted, MD5-signed payment page for card/wallet, or Cash on Delivery with no gateway involved.
+- **Order tracking & invoices** — paginated order history with live status polling, printable itemized invoices, and status-change emails.
+- **Reviews & ratings** on products.
 
 ### For Platform Admins
-- **Global Moderation:** Super-admin controls to suspend businesses, moderate reviews, and oversee platform health.
-- **Centralized Logs:** Access to notification logs and gateway analytics.
+- **Two-layer RBAC** — a `role` (only one super-admin account can ever grant `Admin`) plus independent, per-section `permissions` (`products`, `orders`, `banners`, `promotions`, `settings`) that any admin can grant to another, without needing super-admin status.
+- **Inventory control** — stock in/out adjustments with a capped movement history per product, backed by atomic, race-safe updates (never goes negative under concurrent orders).
+- **Visual template builder** — compose banners and product rails from the same 7–8 layout system customers see, with live position/order control.
+- **Promotions engine** — storewide, per-category, or per-product discounts, auto-applied at the best rate.
+- **Live order notifications**, currency/settings management, and full user management.
 
 ---
 
 ## 🏗️ System Architecture
 
-NexusCart employs a robust, event-driven Microservices Architecture pattern. The frontend strictly communicates with a centralized API Gateway, which handles routing, rate limiting, and forwarding requests to the internal virtual network where the microservices reside.
+The frontend talks exclusively to a public API Gateway, which proxies to internal-only microservices inside Azure's virtual network. Payments are the one place a customer's browser leaves NexusCart entirely — PayHere's IPN webhook then reports back directly to the gateway, server-to-server.
 
 ```mermaid
 graph TD
-    %% Define Client Layer
-    Client[Browser / Mobile Client] -->|HTTPS| Frontend
-    
-    %% Define Frontend Layer
-    subgraph ClientApp [Client Application]
-        Frontend[Next.js App Router]
-    end
-    
-    %% Define API Gateway Layer
-    Frontend -->|API Requests| Gateway[Azure API Gateway]
-    
-    %% Define Microservices Layer
-    subgraph AzureApps [Azure Container Apps Internal VNet]
+    Client[Browser / Mobile Client] -->|HTTPS| Frontend[Next.js App Router]
+    Frontend -->|/api/* proxy| Gateway[API Gateway<br/>external ingress]
+
+    subgraph AzureApps [Azure Container Apps — internal VNet]
         Gateway --> Auth[Auth Service]
-        Gateway --> Biz[Business Service]
         Gateway --> Prod[Product Service]
         Gateway --> Admin[Admin Service]
         Gateway --> Order[Order Service]
@@ -67,146 +59,108 @@ graph TD
         Gateway --> Notif[Notification Service]
         Gateway --> Review[Review Service]
     end
-    
-    %% Define Database Layer
+
     subgraph OracleDB [Oracle Autonomous JSON Database]
         Auth -.-> DB[(Mongo API<br/>on Oracle Cloud)]
-        Biz -.-> DB
         Prod -.-> DB
         Order -.-> DB
+        Pay -.-> DB
     end
-    
-    %% Styling
+
+    Pay -->|hosted checkout| PayHere[(PayHere Gateway)]
+    PayHere -.->|IPN webhook| Gateway
+
     classDef client fill:#111,stroke:#333,stroke-width:2px,color:#fff;
     classDef frontend fill:#000,stroke:#555,stroke-width:2px,color:#fff;
     classDef azure fill:#0072c6,stroke:#005a9e,stroke-width:2px,color:#fff;
     classDef db fill:#004f3f,stroke:#003a2f,stroke-width:2px,color:#fff;
-    
+    classDef ext fill:#5b2a86,stroke:#3d1c5c,stroke-width:2px,color:#fff;
+
     class Client client;
     class Frontend frontend;
-    class Gateway,Auth,Biz,Prod,Admin,Order,Pay,Notif,Review azure;
+    class Gateway,Auth,Prod,Admin,Order,Pay,Notif,Review azure;
     class DB db;
+    class PayHere ext;
 ```
 
 ---
 
 ## 📦 Repository Structure (Git Submodules)
 
-This monorepo utilizes Git Submodules to maintain strict version separation while allowing full-stack local development.
-
 | Component | Path | Tech Stack | Description |
 | :--- | :--- | :--- | :--- |
-| **Frontend** | [`/frontend`](./frontend) | Next.js 16, React, Tailwind, TS | The consumer-facing shopping application and merchant dashboard. |
-| **Backend** | [`/backend`](./backend) | Node.js, Express, Mongoose | The backend monorepo containing all 9 decoupled microservices. |
+| **Frontend** | [`/frontend`](./frontend) | Next.js 16, React 19, Tailwind 4, TS | The customer storefront and admin console. |
+| **Backend** | [`/backend`](./backend) | Node.js, Express, Mongoose, TS | 9 decoupled microservices behind one API Gateway. |
+
+Each has its own README with full setup instructions and a deeper architectural breakdown — [Frontend README](./frontend/README.md) · [Backend README](./backend/README.md).
 
 ---
 
-## 🛠️ Deep Dive: The 9 Microservices
+## 🛠️ The Microservices, at a Glance
 
-In order to guarantee zero single points of failure and independent scalability, the NexusCart backend is split into 9 distinct Node.js Express applications.
+| Service | Role |
+| :--- | :--- |
+| **API Gateway** | Sole public entry point; proxies `/api/*` to every internal service. |
+| **Auth Service** | Registration + OTP verification, login, Google OAuth, password reset, JWT issuance. |
+| **Product Service** | Catalog, categories, banners/promotions, currency & exchange rates, atomic stock control, the banner/product template engine. |
+| **Admin Service** | RBAC (role + per-section permissions), user management, platform metrics, authenticated proxy to Product/Order writes. |
+| **Order Service** | Cart → order conversion, server-computed totals, status lifecycle, internal payment-status endpoint. |
+| **Payment Service** | Real PayHere integration — signed hosted checkout + IPN webhook verification. |
+| **Notification Service** | Dispatches transactional email (order confirmation, status changes) via Brevo. |
+| **Review & Rating Service** | Product reviews and star ratings. |
+| **Business Service** 🚧 | Multi-vendor storefront scaffold — not yet wired into the live platform (see [Roadmap](#-roadmap)). |
 
-### 1. API Gateway (`api-gateway`)
-- **Role:** The sole public-facing entry point for the backend.
-- **Responsibilities:** Request routing, CORS configuration, global rate limiting, and centralized error handling. It proxies traffic to the internal microservices based on URL paths.
-
-### 2. Auth Service (`auth-service`)
-- **Role:** Identity Provider & Access Management.
-- **Responsibilities:** 
-  - Handles User Registration and Login.
-  - Generates secure JWT access tokens.
-  - Manages the Email OTP (One-Time Password) flow — registration and password-reset codes are sent via the Brevo API.
-  - Stores user credentials and profile data in Oracle Autonomous JSON Database (accessed via the Oracle Database API for MongoDB).
-
-### 3. Business Service (`business-service`)
-- **Role:** Merchant & Vendor Operations.
-- **Responsibilities:** 
-  - Onboards new merchants and upgrades standard users to Business accounts.
-  - Stores vendor store configurations, policies, and payout details.
-  - Tracks store-level analytics and performance.
-
-### 4. Product Service (`product-service`)
-- **Role:** Catalog & Inventory Core.
-- **Responsibilities:** 
-  - Exposes powerful CRUD endpoints for merchants to manage their products.
-  - Handles image metadata, variant logic (colors, sizes), and dynamic pricing.
-  - Supports advanced full-text search, filtering by categories, and pagination.
-
-### 5. Order Service (`order-service`)
-- **Role:** Transaction & Fulfillment Lifecycle.
-- **Responsibilities:** 
-  - Converts User Carts into formal Orders.
-  - Tracks order statuses (`PENDING`, `SHIPPED`, `DELIVERED`).
-  - Adjusts inventory counts by securely communicating with the Product Service.
-
-### 6. Payment Service (`payment-service`)
-- **Role:** Secure Financial Gateway.
-- **Responsibilities:** 
-  - Integrates with third-party payment processors (Stripe/PayPal).
-  - Handles incoming webhooks to securely finalize transactions without exposing business logic.
-  - Ensures compliance and logs payment states.
-
-### 7. Notification Service (`notification-service`)
-- **Role:** Multi-Channel Communication.
-- **Responsibilities:** 
-  - A decoupled worker service that listens for internal events (e.g., "Order Placed", "Shipped").
-  - Dispatches transactional email — order confirmation, status updates, and invoices — via the [Brevo](https://www.brevo.com/) API. See the "Transactional Email" section in the [Backend README](./backend/README.md) for a rendered email preview.
-
-### 8. Review & Rating Service (`review-rating-service`)
-- **Role:** Social Proof & Moderation.
-- **Responsibilities:** 
-  - Allows verified buyers to leave reviews on products and businesses.
-  - Calculates average aggregate ratings in real-time.
-  - Supports flagging reviews for admin moderation.
-
-### 9. Admin Service (`admin-service`)
-- **Role:** Super-Admin Operations.
-- **Responsibilities:** 
-  - Provides highly privileged endpoints to suspend users or businesses.
-  - Grants visibility into platform-wide metrics (total revenue, active users).
+Full responsibilities, request flows, and a payment sequence diagram are in the [Backend README](./backend/README.md#️-deep-dive-the-microservices).
 
 ---
 
 ## 🚀 Getting Started
 
-To run the entire NexusCart platform locally on your machine, follow these steps:
-
-### 1. Clone the Monorepo (Important!)
-Because this repository relies on Git Submodules, you **must** include the `--recurse-submodules` flag when cloning:
-
+### 1. Clone with submodules
 ```bash
 git clone --recurse-submodules https://github.com/ChamathDilshanC/NexusCart-Microservices-Monorepo.git
 cd NexusCart-Microservices-Monorepo
 ```
+*(Already cloned without it? Run `git submodule update --init --recursive`.)*
 
-*(If you already cloned it normally, you can fetch the submodules manually by running: `git submodule update --init --recursive`)*
-
-### 2. Configure Environment Variables
-You will need to set up local `.env` files for both the frontend and the backend.
-
+### 2. Configure environment
+- **Backend:** `cd backend && cp .env.example .env` — see the [Backend README](./backend/README.md#-quick-start-local-development) for what each variable does.
 - **Frontend:** `cd frontend && cp .env.example .env.local`
-- **Backend:** `cd backend && cp .env.example .env` (Ensure your local MongoDB URI is set)
 
-### 3. Start the Backend Infrastructure
-The backend uses Docker Compose or local Node runners. Please refer to the [Backend README](./backend/README.md) for detailed instructions on launching the API Gateway and microservices.
+### 3. Start the backend
+```bash
+cd backend
+npm install && npm run install:all
+npm run dev
+```
+This spins up the API Gateway (`:5000`) and all microservices concurrently — visit `http://localhost:5000` for a live, browsable route index.
 
-### 4. Start the Frontend Application
-Once the API Gateway is running on `http://localhost:5000`:
+### 4. Start the frontend
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-Visit `http://localhost:3000` to view the application!
+Visit `http://localhost:3000`.
 
 ---
 
 ## ☁️ Cloud Deployment (CI/CD)
 
-The platform's compute is deployed to **Microsoft Azure**; its database runs on **Oracle Cloud Infrastructure (OCI)**.
+- **Compute:** Microsoft Azure Container Apps — every backend service is its own container, the API Gateway is the only one with external ingress.
+- **CI/CD:** every push to the backend's `main` triggers a path-filtered GitHub Actions workflow — only services whose files actually changed get rebuilt, pushed to Azure Container Registry, and rolled out, each verified healthy post-deploy.
+- **Frontend:** deploys to Vercel automatically on push to `main`.
+- **Database:** Oracle Autonomous JSON Database (Always Free tier) via the Oracle Database API for MongoDB — Mongoose connects to it unchanged. It replaced Azure Cosmos DB to cut hosting cost; see [`docs/OCI_MIGRATION.md`](./docs/OCI_MIGRATION.md) for the migration runbook.
+- **Payments:** PayHere, Sri Lanka's Central-Bank-approved gateway — Sandbox mode for testing, a one-line env flag to go live.
+- **Secrets** (`JWT_SECRET`, `PAYHERE_MERCHANT_SECRET`, etc.) are set directly as Azure Container Apps environment variables per service, not synced from CI on every deploy.
 
-- Every `git push` to the backend repository triggers a **GitHub Actions** workflow that builds 9 separate Docker images in parallel, pushes them to Azure Container Registry (ACR), and executes zero-downtime rolling updates to Azure Container Apps.
-- Secrets (like `MONGODB_URI` and `JWT_SECRET`) are stored as native Azure Container Apps secrets and injected at runtime.
-- The primary database is an **Oracle Autonomous JSON Database** (Always Free tier), accessed via the **Oracle Database API for MongoDB** — Mongoose/MongoDB drivers connect to it unchanged. It replaced Azure Cosmos DB (Mongo API) to cut hosting cost; see [`docs/OCI_MIGRATION.md`](./docs/OCI_MIGRATION.md) for the migration runbook.
+---
+
+## 🗺️ Roadmap
+
+- **Multi-vendor marketplace** — wire up `business-service`: add a `Vendor` role, proxy it through the API Gateway, and connect merchant storefronts to the catalog.
+- **Payment-receipt email** — route the `PAYMENT_SUCCESS` event to its own template (today the order-status-change email already covers the PAID transition).
+- Real image hosting for admin-uploaded product images (currently base64-encoded, which some email clients strip).
 
 ---
 
